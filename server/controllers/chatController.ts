@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
+import User from "../models/User";
 
 // Get all chats for current user
 export const getUserChats = async (req: any, res: Response) => {
@@ -32,14 +33,14 @@ export const getChatById = async (req: any, res: Response) => {
     }
 
     // Check if user is a participant in this chat
-    if (
-      !chat.participants.some(
-        (p) => (p as any)._id.toString() === req.user._id.toString()
-      )
-    ) {
-      res.status(403).json({ message: "Access denied" });
-      return;
-    }
+    // if (
+    //   !chat.participants.some(
+    //     (p) => (p as any)._id.toString() === req.user._id.toString()
+    //   )
+    // ) {
+    //   res.status(403).json({ message: "Access denied" });
+    //   return;
+    // }
 
     // Fetch messages for this chat
     const messages = await Message.find({ chat: chat._id })
@@ -171,6 +172,28 @@ export const exportChatHistory = async (req: any, res: Response) => {
     res.json(exportData);
   } catch (error) {
     console.error("Error exporting chat history:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const acceptParticipant = async (req: Request, res: Response) => {
+  const chatId = req.params.chatId;
+  try {
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      res.status(404).json({ message: "Chat not found" });
+      return;
+    }
+    if (chat.participants.includes(req.user._id)) {
+      res.status(200).json({ success: true });
+      return;
+    }
+
+    chat.participants = [...chat.participants, req.user._id];
+    await chat.save();
+
+    res.status(200).json({ success: true });
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };

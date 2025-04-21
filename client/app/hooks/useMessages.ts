@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Message, User, Chat } from "../types";
 import { messageService } from "../services/api";
+import { useSocket } from "./useSocket";
 
 interface UseMessagesOptions {
   chatId: string | null;
@@ -28,6 +29,9 @@ export function useMessages({
     total: 0,
     hasMore: false,
   });
+
+  // Use our Socket.IO hook
+  const { socket, isConnected, joinChat } = useSocket();
 
   // Fetch messages for current chat
   const fetchMessages = useCallback(
@@ -81,9 +85,9 @@ export function useMessages({
       };
 
       // Add to messages immediately (optimistic update)
-      if (content.trim()) {
-        setMessages((prev) => [...prev, optimisticMessage]);
-      }
+      // if (content.trim()) {
+      //   setMessages((prev) => [...prev, optimisticMessage]);
+      // }
 
       try {
         setSending(true);
@@ -120,11 +124,46 @@ export function useMessages({
   useEffect(() => {
     if (chatId) {
       fetchMessages();
+
+      // Join the chat room when the chat ID changes
+      if (isConnected) {
+        joinChat(chatId);
+      }
     } else {
       setMessages([]);
       setLoading(false);
     }
-  }, [chatId, fetchMessages]);
+  }, [chatId]);
+
+  // Listen for new messages via Socket.IO
+  useEffect(() => {
+    if (!socket || !chatId) return;
+
+    // Handler for new messages received via Socket.IO
+    const handleNewMessage = (newMessage: Message) => {
+      console.log("New message received:", newMessage);
+
+      // Only add the message if it's for the current chat
+      if (newMessage.chat === chatId) {
+        // Avoid duplicate messages (that we might have sent ourselves)
+        setMessages((prevMessages) => {
+          // Check if we already have this message (by ID)
+          if (prevMessages.some((msg) => msg._id === newMessage._id)) {
+            return prevMessages;
+          }
+          return [...prevMessages, newMessage];
+        });
+      }
+    };
+
+    // Subscribe to new messages
+    socket.on("new_message", handleNewMessage);
+
+    // Clean up
+    return () => {
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [socket, chatId]);
 
   // Helpers
   const clearError = () => setError(null);

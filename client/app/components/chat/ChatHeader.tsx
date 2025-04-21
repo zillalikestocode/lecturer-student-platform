@@ -9,10 +9,19 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ chat }: ChatHeaderProps) {
   if (!chat) return null;
+  const [showCopied, setShowCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(
+      window.location.href + `invite?id=${chat._id}`
+    );
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  };
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700">
-      <div className="flex justify-between items-center">
+    <div className="border-b w-full border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700">
+      <div className="flex w-full justify-between items-center">
         <div className="flex items-center">
           <div className="bg-green-100 dark:bg-green-900 w-10 h-10 rounded-full flex items-center justify-center">
             <svg
@@ -38,6 +47,26 @@ export function ChatHeader({ chat }: ChatHeaderProps) {
             </p>
           </div>
         </div>
+        <button
+          onClick={handleCopy}
+          className="font-medium text-xs flex items-center bg-green-900 text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 mr-1"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+          </svg>
+          Copy Link
+          {showCopied && (
+            <span className="absolute -top-8 left-0 bg-gray-900 text-white px-2 py-1 rounded text-xs">
+              Link copied!
+            </span>
+          )}
+        </button>
       </div>
     </div>
   );

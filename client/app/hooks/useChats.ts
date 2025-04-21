@@ -14,6 +14,19 @@ export function useChats({ currentUser }: UseChatsOptions) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Get chat by id
+  const getChat = useCallback(
+    async (chatId: string) => {
+      try {
+        const data = await chatService.getChat(currentUser?.token!, chatId);
+        return data;
+      } catch (err) {
+        return null;
+      }
+    },
+    [currentUser?.token]
+  );
+
   // Fetch all chats
   const fetchChats = useCallback(async () => {
     try {
@@ -50,6 +63,23 @@ export function useChats({ currentUser }: UseChatsOptions) {
         return null;
       } finally {
         setLoading(false);
+      }
+    },
+    [currentUser?.token]
+  );
+
+  // Accept invite
+  const acceptInvite = useCallback(
+    async (chatId: string) => {
+      try {
+        const data = await chatService.acceptInvite(currentUser.token!, chatId);
+
+        if (data.success) {
+          return true;
+        }
+        return false;
+      } catch (err) {
+        return false;
       }
     },
     [currentUser?.token]
@@ -105,6 +135,8 @@ export function useChats({ currentUser }: UseChatsOptions) {
     createChat,
     deleteChat,
     selectChat,
+    acceptInvite,
+    getChat,
     clearError,
   };
 }

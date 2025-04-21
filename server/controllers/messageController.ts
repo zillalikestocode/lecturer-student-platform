@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
+import { getIO } from "../services/socketService";
 
 // Send a new message in a chat
 export const sendMessage = async (req: any, res: Response) => {
@@ -34,12 +35,21 @@ export const sendMessage = async (req: any, res: Response) => {
       chat: chat._id,
     });
 
-    // Update chat's latest message
+    // Update latest message in chat
     chat.latestMessage = newMessage._id as any;
     await chat.save();
 
     // Populate sender information
     await newMessage.populate("sender", "name role");
+
+    // Emit message via Socket.IO
+    try {
+      const io = getIO();
+      io.to(chat._id.toString()).emit("new_message", newMessage);
+    } catch (socketError) {
+      console.error("Socket.IO emission error:", socketError);
+      // Continue with response even if socket emission fails
+    }
 
     res.status(201).json(newMessage);
   } catch (error) {
@@ -64,31 +74,34 @@ export const getMessages = async (req: any, res: Response) => {
     }
 
     if (!chat.participants.includes(req.user._id)) {
-      res.status(403).json({ message: "Not authorized to access this chat" });
+      res
+        .status(403)
+        .json({ message: "Not authorized to access this chat's messages" });
       return;
     }
 
-    // Get total count for pagination
-    const totalMessages = await Message.countDocuments({ chat: chatId });
-
-    // Fetch messages with pagination
+    // Get messages for this chat with pagination
     const messages = await Message.find({ chat: chatId })
       .populate("sender", "name email role")
-      .sort({ createdAt: -1 }) // Most recent first
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
+    // Get total count for pagination
+    const total = await Message.countDocuments({ chat: chatId });
+
+    // Return messages in ascending order for display (oldest first)
     res.json({
-      messages: messages.reverse(), // Reverse to show oldest first when displaying
+      messages: messages.reverse(),
       pagination: {
-        total: totalMessages,
         page,
-        pages: Math.ceil(totalMessages / limit),
-        hasMore: skip + messages.length < totalMessages,
+        pages: Math.ceil(total / limit),
+        total,
+        hasMore: page < Math.ceil(total / limit),
       },
     });
   } catch (error) {
-    console.error("Error fetching message history:", error);
+    console.error("Error fetching messages:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

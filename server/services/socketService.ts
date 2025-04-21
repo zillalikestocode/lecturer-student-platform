@@ -5,8 +5,11 @@ import User from "../models/User";
 import Chat from "../models/Chat";
 import Message from "../models/Message";
 
+// Create a variable to hold the io instance
+let io: Server;
+
 export const setupSocketIO = (server: http.Server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: "http://localhost:3000", // Frontend URL
       methods: ["GET", "POST"],
@@ -94,5 +97,13 @@ export const setupSocketIO = (server: http.Server) => {
     });
   });
 
+  return io;
+};
+
+// Export the io instance for use in other files
+export const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.io not initialized");
+  }
   return io;
 };

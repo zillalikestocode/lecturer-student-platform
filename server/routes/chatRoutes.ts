@@ -5,6 +5,7 @@ import {
   createChat,
   deleteChat,
   exportChatHistory,
+  acceptParticipant,
 } from "../controllers/chatController";
 import { protect } from "../middleware/auth";
 
@@ -19,5 +20,6 @@ router.route("/").get(getUserChats).post(createChat);
 router.route("/:id").get(getChatById).delete(deleteChat);
 
 router.get("/:id/export", exportChatHistory);
+router.get("/accept/:chatId", acceptParticipant);
 
 export default router;

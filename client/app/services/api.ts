@@ -48,6 +48,14 @@ export const chatService = {
     const response = await instance.delete(`/chats/${chatId}`);
     return response.data;
   },
+
+  // Accept invite
+  async acceptInvite(token: string, chatId: string) {
+    const instance = api.createAxiosInstance(token);
+    const response = await instance.get(`/chats/accept/${chatId}`);
+    console.log(response.data);
+    return response.data;
+  },
 };
 
 // Message API service
