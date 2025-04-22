@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: lecture-platform-server
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/lecture-student-platform
+      - JWT_SECRET=your-production-secret-change-me
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - lecture-platform-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: lecture-platform-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - lecture-platform-network
+    restart: unless-stopped
+
+networks:
+  lecture-platform-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    driver: local

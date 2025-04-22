@@ -29,12 +29,7 @@ const server = http.createServer(app);
 const io = setupSocketIO(server);
 
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 

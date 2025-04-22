@@ -9,13 +9,7 @@ import Message from "../models/Message";
 let io: Server;
 
 export const setupSocketIO = (server: http.Server) => {
-  io = new Server(server, {
-    cors: {
-      origin: "http://localhost:3000", // Frontend URL
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-  });
+  io = new Server(server);
 
   // Socket.IO setup with authentication
   io.use(async (socket, next) => {
