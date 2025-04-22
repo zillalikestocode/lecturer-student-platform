@@ -45,7 +45,7 @@ export const sendMessage = async (req: any, res: Response) => {
     // Emit message via Socket.IO
     try {
       const io = getIO();
-      io.to(chat._id.toString()).emit("new_message", newMessage);
+      io.to((chat._id as any).toString()).emit("new_message", newMessage);
     } catch (socketError) {
       console.error("Socket.IO emission error:", socketError);
       // Continue with response even if socket emission fails
