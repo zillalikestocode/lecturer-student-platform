@@ -9,7 +9,9 @@ import Message from "../models/Message";
 let io: Server;
 
 export const setupSocketIO = (server: http.Server) => {
-  io = new Server(server);
+  io = new Server(server, {
+    cors: { origin: "https://lecturer-student.vercel.app" },
+  });
 
   // Socket.IO setup with authentication
   io.use(async (socket, next) => {
