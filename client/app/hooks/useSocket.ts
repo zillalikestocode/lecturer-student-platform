@@ -14,7 +14,7 @@ export const useSocket = () => {
     }
 
     // Create socket connection
-    const socketInstance = io("http://localhost:5000", {
+    const socketInstance = io("https://lecturere-api.emmanuelngoka.work", {
       auth: {
         token: currentUser.token,
       },

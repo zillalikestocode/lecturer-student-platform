@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setError(null);
       setLoading(true);
       const { data } = await axios.post(
-        "http://localhost:5000/api/users/login",
+        `${process.env.NEXT_PUBLIC_API_URL}api/users/login`,
         {
           email,
           password,
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setError(null);
       setLoading(true);
       const { data } = await axios.post(
-        "http://localhost:5000/api/users/register",
+        `${process.env.NEXT_PUBLIC_API_URL}api/users/register`,
         {
           name,
           email,
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/users/logout",
+        `${process.env.NEXT_PUBLIC_API_URL}api/users/logout`,
         {},
         { withCredentials: true }
       );
