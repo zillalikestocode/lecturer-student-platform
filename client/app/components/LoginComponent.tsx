@@ -20,8 +20,31 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
   const [department, setDepartment] = useState("");
   const [faculty, setFaculty] = useState("");
   const [matriculationNumber, setMatriculationNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isCodeSent, setIsCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSendCode = async () => {
+    if (!email) {
+      setError("Please enter an email address first");
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await userService.sendCode(email);
+      setIsCodeSent(true);
+      alert("Verification code sent to your email.");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Failed to send verification code. Please try again."
+      );
+      console.error("Send code error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,12 +58,20 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
         const data = await userService.login(email, password);
         onLogin(data);
       } else {
-        // Register
+        // For registration, first check if verification code is provided
+        if (!verificationCode) {
+          setError("Please enter the verification code sent to your email");
+          setLoading(false);
+          return;
+        }
+
+        // Register with OTP
         const data = await userService.register(
           name,
           email,
           password,
           role,
+          verificationCode, // Pass OTP as the 5th parameter
           department,
           faculty,
           role === "student" ? matriculationNumber : undefined
@@ -190,6 +221,25 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
                   placeholder="Enter your matriculation number"
                   label="Matriculation Number"
                 />
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <Input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="Enter verification code"
+                  label="Verification Code"
+                />
+                <Button
+                  type="button"
+                  onClick={handleSendCode}
+                  disabled={loading || isCodeSent}
+                >
+                  {isCodeSent ? "Code Sent" : "Get Code"}
+                </Button>
               </div>
             )}
 

@@ -1,8 +1,65 @@
 import type { Request, Response } from "express";
 import User from "../models/User";
 import { generateToken } from "../middleware/auth";
+import nodemailer from "nodemailer";
+import Otp from "../models/Otp";
 
-// Register a new user
+// Generate a random verification code
+const generateVerificationCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+// Send verification code to email
+const sendVerificationEmail = async (email: string, code: string) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `EduChat <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Your Verification Code",
+    text: `Your verification code is: ${code}`,
+  });
+};
+
+export const sendCode = async (req: Request, res: Response) => {
+  const email = req.query.email as string;
+  
+  if (!email) {
+    res.status(400).json({ message: "Email is required" });
+    return;
+  }
+
+  try {
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      res.status(400).json({ message: "User already exists" });
+      return;
+    }
+    
+    const verificationCode = generateVerificationCode();
+    
+    // Store the OTP in the database
+    await Otp.findOneAndUpdate(
+      { email },
+      { email, code: verificationCode },
+      { upsert: true, new: true }
+    );
+    
+    await sendVerificationEmail(email, verificationCode);
+    
+    res.status(200).json({ message: "Verification code sent successfully" });
+  } catch (err) {
+    console.error("Send code error:", err);
+    res.status(500).json({ message: "An error occurred" });
+  }
+};
+
+// Register a new user with email verification
 export const registerUser = async (req: Request, res: Response) => {
   const {
     name,
@@ -12,18 +69,27 @@ export const registerUser = async (req: Request, res: Response) => {
     department,
     faculty,
     matriculationNumber,
+    otp: submittedOtp,
   } = req.body;
 
   try {
-    // Check if user already exists
     const userExists = await User.findOne({ email });
-
     if (userExists) {
       res.status(400).json({ message: "User already exists" });
       return;
     }
 
-    // Create new user
+    const otpRecord = await Otp.findOne({ email });
+    if (!otpRecord) {
+      res.status(400).json({ message: "OTP expired" });
+      return;
+    }
+    if (otpRecord.code !== submittedOtp) {
+      res.status(400).json({ message: "Incorrect OTP" });
+      return;
+    }
+
+    // Temporarily store the user data and verification code in the database
     const user = await User.create({
       name,
       email,
@@ -34,32 +100,31 @@ export const registerUser = async (req: Request, res: Response) => {
       matriculationNumber: role === "student" ? matriculationNumber : undefined,
     });
 
-    if (user) {
-      // Generate JWT token
-      const token = generateToken((user._id as any).toString());
+    // Delete the OTP record after successful verification
+    await Otp.deleteOne({ email });
 
-      // Set cookie
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: process.env.NODE_ENV === "production", // Use secure in production
-        sameSite: "strict",
-      });
+    // Generate JWT token
+    const token = generateToken((user._id as any).toString());
 
-      // Send response
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        faculty: user.faculty,
-        matriculationNumber: user.matriculationNumber,
-        token,
-      });
-    } else {
-      res.status(400).json({ message: "Invalid user data" });
-    }
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === "production", // Use secure in production
+      sameSite: "strict",
+    });
+
+    // Send response
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      faculty: user.faculty,
+      matriculationNumber: user.matriculationNumber,
+      token,
+    });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ message: "Server error during registration" });
@@ -71,7 +136,6 @@ export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
-    // Find user by email
     const user = await User.findOne({ email });
 
     // Check if user exists and password matches

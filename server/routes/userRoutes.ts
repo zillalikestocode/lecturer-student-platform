@@ -7,6 +7,7 @@ import {
   getUserById,
   getUserProfile,
   searchLecturers,
+  sendCode,
 } from "../controllers/userController";
 import { protect } from "../middleware/auth";
 
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
+router.get("/send-code", sendCode);
 
 // Protected routes
 router.get("/profile", protect, getUserProfile);

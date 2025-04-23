@@ -155,12 +155,19 @@ export const userService = {
     return response.data;
   },
 
+  // Send verification code
+  async sendCode(email: string) {
+    const response = await axios.get(`${API_BASE_URL}/users/send-code?email=${encodeURIComponent(email)}`);
+    return response.data;
+  },
+
   // Register user
   async register(
     name: string,
     email: string,
     password: string,
     role: string,
+    otp: string,
     department?: string,
     faculty?: string,
     matriculationNumber?: string
@@ -170,6 +177,7 @@ export const userService = {
       email,
       password,
       role,
+      otp,
       department,
       faculty,
       matriculationNumber,
@@ -181,6 +189,23 @@ export const userService = {
   async getProfile(token: string) {
     const instance = api.createAxiosInstance(token);
     const response = await instance.get("/users/profile");
+    return response.data;
+  },
+
+  // Send verification code to email
+  async sendVerificationCode(email: string) {
+    const response = await axios.post(`${API_BASE_URL}/users/send-code`, {
+      email,
+    });
+    return response.data;
+  },
+
+  // Verify email with code
+  async verifyEmail(email: string, code: string) {
+    const response = await axios.post(`${API_BASE_URL}/users/verify-email`, {
+      email,
+      code,
+    });
     return response.data;
   },
 };
