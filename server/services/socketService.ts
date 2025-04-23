@@ -11,7 +11,7 @@ let io: Server;
 export const setupSocketIO = (server: http.Server) => {
   io = new Server(server, {
     cors: {
-      origin: ["https://lecturer-student.vercel.app", "http://localhost:3000"],
+      origin: ["https://cs-educhat.vercel.app", "http://localhost:3000"],
     },
   });
 
