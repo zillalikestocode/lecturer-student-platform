@@ -6,6 +6,7 @@ import {
   getUsers,
   getUserById,
   getUserProfile,
+  searchLecturers,
 } from "../controllers/userController";
 import { protect } from "../middleware/auth";
 
@@ -18,6 +19,7 @@ router.post("/logout", logoutUser);
 
 // Protected routes
 router.get("/profile", protect, getUserProfile);
+router.get("/search/lecturers", protect, searchLecturers);
 router.get("/", protect, getUsers);
 router.get("/:id", protect, getUserById);
 

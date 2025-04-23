@@ -4,7 +4,15 @@ import { generateToken } from "../middleware/auth";
 
 // Register a new user
 export const registerUser = async (req: Request, res: Response) => {
-  const { name, email, password, role } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    department,
+    faculty,
+    matriculationNumber,
+  } = req.body;
 
   try {
     // Check if user already exists
@@ -21,6 +29,9 @@ export const registerUser = async (req: Request, res: Response) => {
       email,
       password,
       role,
+      department,
+      faculty,
+      matriculationNumber: role === "student" ? matriculationNumber : undefined,
     });
 
     if (user) {
@@ -41,6 +52,9 @@ export const registerUser = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        department: user.department,
+        faculty: user.faculty,
+        matriculationNumber: user.matriculationNumber,
         token,
       });
     } else {
@@ -79,6 +93,9 @@ export const loginUser = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        department: user.department,
+        faculty: user.faculty,
+        matriculationNumber: user.matriculationNumber,
         token,
       });
     } else {
@@ -97,6 +114,36 @@ export const logoutUser = (_req: Request, res: Response) => {
     expires: new Date(0),
   });
   res.status(200).json({ message: "Logged out successfully" });
+};
+
+// Search lecturers by name, faculty or department
+export const searchLecturers = async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      res.status(400).json({ message: "Search query is required" });
+      return;
+    }
+
+    // Search for lecturers by name, faculty, or department using regex for partial matches
+    const lecturers = await User.find({
+      role: "lecturer",
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { faculty: { $regex: query, $options: "i" } },
+        { department: { $regex: query, $options: "i" } },
+      ],
+    }).select("name email faculty department");
+
+    res.json({
+      results: lecturers,
+      count: lecturers.length,
+    });
+  } catch (error) {
+    console.error("Error searching lecturers:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // Get all users

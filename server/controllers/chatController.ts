@@ -95,6 +95,63 @@ export const createChat = async (req: any, res: Response) => {
   }
 };
 
+// Create a direct chat with a lecturer
+export const createLecturerChat = async (req: any, res: Response) => {
+  const { lecturerId } = req.body;
+  const currentUserId = req.user._id;
+
+  if (!lecturerId) {
+    res.status(400).json({ message: "Lecturer ID is required" });
+    return;
+  }
+
+  try {
+    // Check if the lecturer exists and is actually a lecturer
+    const lecturer = await User.findOne({
+      _id: lecturerId,
+      role: "lecturer",
+    });
+
+    if (!lecturer) {
+      res.status(404).json({ message: "Lecturer not found" });
+      return;
+    }
+
+    // Check if a direct chat between these users already exists
+    const existingChat = await Chat.findOne({
+      isGroupChat: false,
+      participants: {
+        $all: [currentUserId, lecturerId],
+        $size: 2,
+      },
+    }).populate("participants", "name email role");
+
+    if (existingChat) {
+      // Return the existing chat
+      res.json(existingChat);
+      return;
+    }
+
+    // Create a new direct chat
+    const newChat = await Chat.create({
+      name: `Chat with ${lecturer.name}`,
+      participants: [currentUserId, lecturerId],
+      isGroupChat: false,
+    });
+
+    // Populate and return the new chat
+    const fullChat = await Chat.findById(newChat._id).populate(
+      "participants",
+      "name email role"
+    );
+
+    res.status(201).json(fullChat);
+  } catch (error) {
+    console.error("Error creating chat with lecturer:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Delete a chat
 export const deleteChat = async (req: any, res: Response) => {
   try {

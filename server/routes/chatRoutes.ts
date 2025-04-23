@@ -6,6 +6,7 @@ import {
   deleteChat,
   exportChatHistory,
   acceptParticipant,
+  createLecturerChat,
 } from "../controllers/chatController";
 import { protect } from "../middleware/auth";
 
@@ -16,6 +17,9 @@ router.use(protect);
 
 // Chat routes
 router.route("/").get(getUserChats).post(createChat);
+
+// Lecturer direct chat route
+router.post("/lecturer", createLecturerChat);
 
 router.route("/:id").get(getChatById).delete(deleteChat);
 
