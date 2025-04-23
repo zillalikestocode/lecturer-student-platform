@@ -57,7 +57,25 @@ export default function MainPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Lecture Student Platform</h1>
+        <div className="flex items-center">
+          <div className="bg-green-500 h-10 w-10 flex items-center justify-center rounded-md">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-white"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <span className="font-bold text-2xl ml-2 text-gray-900 dark:text-white">
+            EduChat
+          </span>
+        </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center">
             <div className="bg-green-100 dark:bg-green-900 rounded-full w-8 h-8 flex items-center justify-center mr-2">

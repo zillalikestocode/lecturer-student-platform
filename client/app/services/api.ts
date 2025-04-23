@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base API URL
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://lecturer-api.emmanuelngoka.work/api";
 
 export const api = {
   // Method to create axios instance with auth token
