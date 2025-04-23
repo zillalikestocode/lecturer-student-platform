@@ -14,7 +14,6 @@ const generateVerificationCode = () =>
 // Send verification code to email
 const sendVerificationEmail = async (email: string, code: string) => {
   const transporter = nodemailer.createTransport({
-    secure: false,
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,

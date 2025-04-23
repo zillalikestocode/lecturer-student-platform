@@ -5,13 +5,14 @@ import { User } from "../types";
 import { userService } from "../services/api";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
-import { ErrorMessage } from "./ui/ErrorMessage";
+import { useToast } from "../context/ToastContext";
 
 interface LoginComponentProps {
   onLogin: (user: User) => void;
 }
 
 export default function LoginComponent({ onLogin }: LoginComponentProps) {
+  const { showToast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,11 +24,10 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
   const [verificationCode, setVerificationCode] = useState("");
   const [isCodeSent, setIsCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSendCode = async () => {
     if (!email) {
-      setError("Please enter an email address first");
+      showToast("Please enter an email address first", "error");
       return;
     }
 
@@ -35,11 +35,12 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
       setLoading(true);
       await userService.sendCode(email);
       setIsCodeSent(true);
-      alert("Verification code sent to your email.");
+      showToast("Verification code sent to your email", "success");
     } catch (err: any) {
-      setError(
+      showToast(
         err.response?.data?.message ||
-          "Failed to send verification code. Please try again."
+          "Failed to send verification code. Please try again.",
+        "error"
       );
       console.error("Send code error:", err);
     } finally {
@@ -49,7 +50,6 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     try {
       setLoading(true);
@@ -58,10 +58,14 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
         // Login
         const data = await userService.login(email, password);
         onLogin(data);
+        showToast("Login successful", "success");
       } else {
         // For registration, first check if verification code is provided
         if (!verificationCode) {
-          setError("Please enter the verification code sent to your email");
+          showToast(
+            "Please enter the verification code sent to your email",
+            "error"
+          );
           setLoading(false);
           return;
         }
@@ -78,11 +82,13 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
           role === "student" ? matriculationNumber : undefined
         );
         onLogin(data);
+        showToast("Account created successfully", "success");
       }
     } catch (err: any) {
-      setError(
+      showToast(
         err.response?.data?.message ||
-          "An error occurred. Please try again later."
+          "An error occurred. Please try again later.",
+        "error"
       );
       console.error("Auth error:", err);
     } finally {
@@ -92,7 +98,8 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
 
   const toggleAuthMode = () => {
     setIsLogin(!isLogin);
-    setError(null);
+    setVerificationCode("");
+    setIsCodeSent(false);
   };
 
   return (
@@ -132,8 +139,6 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
                 : "Create an account to enhance your academic experience"}
             </p>
           </div>
-
-          <ErrorMessage error={error} />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
@@ -226,21 +231,26 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
             )}
 
             {!isLogin && (
-              <div>
-                <Input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="Enter verification code"
-                  label="Verification Code"
-                />
-                <Button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={loading || isCodeSent}
-                >
-                  {isCodeSent ? "Code Sent" : "Get Code"}
-                </Button>
+              <div className="flex items-center space-x-2">
+                <div className="flex-grow">
+                  <Input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    placeholder="Enter verification code"
+                    label="Verification Code"
+                  />
+                </div>
+                <div className="mt-5">
+                  <Button
+                    type="button"
+                    onClick={handleSendCode}
+                    disabled={loading || isCodeSent}
+                    className="whitespace-nowrap"
+                  >
+                    {isCodeSent ? "Code Sent" : "Get Code"}
+                  </Button>
+                </div>
               </div>
             )}
 
