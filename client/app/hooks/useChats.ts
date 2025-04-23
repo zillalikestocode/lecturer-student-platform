@@ -68,6 +68,38 @@ export function useChats({ currentUser }: UseChatsOptions) {
     [currentUser?.token]
   );
 
+  // Function to create a chat with a lecturer
+  const createLecturerChat = async (lecturerId: string) => {
+    try {
+      setError(null);
+
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        throw new Error("Authentication required");
+      }
+
+      const user = JSON.parse(userString);
+      const newChat = await chatService.createLecturerChat(
+        user.token,
+        lecturerId
+      );
+
+      // Update chats to include the new one
+      setChats((prevChats) => {
+        if (prevChats.find((chat) => chat._id === newChat._id)) {
+          return prevChats; // Chat already exists
+        }
+        return [newChat, ...prevChats];
+      });
+
+      return newChat;
+    } catch (error) {
+      console.error("Error creating lecturer chat:", error);
+      setError("Failed to create chat with lecturer");
+      return null;
+    }
+  };
+
   // Accept invite
   const acceptInvite = useCallback(
     async (chatId: string) => {
@@ -133,6 +165,7 @@ export function useChats({ currentUser }: UseChatsOptions) {
     error,
     fetchChats,
     createChat,
+    createLecturerChat,
     deleteChat,
     selectChat,
     acceptInvite,

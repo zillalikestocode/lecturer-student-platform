@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base API URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = "http://localhost:5000/api";
 
 export const api = {
   // Method to create axios instance with auth token
@@ -29,6 +29,13 @@ export const chatService = {
   async getChat(token: string, chatId: string) {
     const instance = api.createAxiosInstance(token);
     const response = await instance.get(`/chats/${chatId}`);
+    return response.data;
+  },
+
+  // Create a chat with a lecturer
+  async createLecturerChat(token: string, lecturerId: string) {
+    const instance = api.createAxiosInstance(token);
+    const response = await instance.post("/chats/lecturer", { lecturerId });
     return response.data;
   },
 
@@ -139,13 +146,33 @@ export const userService = {
     return response.data;
   },
 
+  // Search for lecturers by name, faculty or department
+  async searchLecturers(token: string, query: string) {
+    const instance = api.createAxiosInstance(token);
+    const response = await instance.get(
+      `/users/search/lecturers?query=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  },
+
   // Register user
-  async register(name: string, email: string, password: string, role: string) {
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    role: string,
+    department?: string,
+    faculty?: string,
+    matriculationNumber?: string
+  ) {
     const response = await axios.post(`${API_BASE_URL}/users/register`, {
       name,
       email,
       password,
       role,
+      department,
+      faculty,
+      matriculationNumber,
     });
     return response.data;
   },

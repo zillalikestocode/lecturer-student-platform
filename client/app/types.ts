@@ -4,6 +4,9 @@ export interface User {
   email: string;
   role: "lecturer" | "student";
   token?: string;
+  department?: string;
+  faculty?: string;
+  matriculationNumber?: string;
 }
 
 export interface Message {

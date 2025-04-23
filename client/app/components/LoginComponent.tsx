@@ -17,6 +17,9 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
   const [password, setPassword] = useState("");
+  const [department, setDepartment] = useState("");
+  const [faculty, setFaculty] = useState("");
+  const [matriculationNumber, setMatriculationNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +36,15 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
         onLogin(data);
       } else {
         // Register
-        const data = await userService.register(name, email, password, role);
+        const data = await userService.register(
+          name,
+          email,
+          password,
+          role,
+          department,
+          faculty,
+          role === "student" ? matriculationNumber : undefined
+        );
         onLogin(data);
       }
     } catch (err: any) {
@@ -119,6 +130,42 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
                 <option value="student">Student</option>
                 <option value="lecturer">Lecturer</option>
               </select>
+            </div>
+          )}
+
+          {!isLogin && (
+            <div>
+              <Input
+                type="text"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Enter your department"
+                label="Department"
+              />
+            </div>
+          )}
+
+          {!isLogin && (
+            <div>
+              <Input
+                type="text"
+                value={faculty}
+                onChange={(e) => setFaculty(e.target.value)}
+                placeholder="Enter your faculty"
+                label="Faculty"
+              />
+            </div>
+          )}
+
+          {!isLogin && role === "student" && (
+            <div>
+              <Input
+                type="text"
+                value={matriculationNumber}
+                onChange={(e) => setMatriculationNumber(e.target.value)}
+                placeholder="Enter your matriculation number"
+                label="Matriculation Number"
+              />
             </div>
           )}
 
