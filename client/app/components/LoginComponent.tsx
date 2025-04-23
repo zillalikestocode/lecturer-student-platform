@@ -30,7 +30,7 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
       setError("Please enter an email address first");
       return;
     }
-    
+
     try {
       setLoading(true);
       await userService.sendCode(email);
@@ -38,7 +38,8 @@ export default function LoginComponent({ onLogin }: LoginComponentProps) {
       alert("Verification code sent to your email.");
     } catch (err: any) {
       setError(
-        err.response?.data?.message || "Failed to send verification code. Please try again."
+        err.response?.data?.message ||
+          "Failed to send verification code. Please try again."
       );
       console.error("Send code error:", err);
     } finally {

@@ -1,7 +1,8 @@
 import axios from "axios";
 
 // Base API URL
-const API_BASE_URL = "https://lecturer-api.emmanuelngoka.work/api";
+// const API_BASE_URL = "https://lecturer-api.emmanuelngoka.work/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 export const api = {
   // Method to create axios instance with auth token
@@ -157,7 +158,9 @@ export const userService = {
 
   // Send verification code
   async sendCode(email: string) {
-    const response = await axios.get(`${API_BASE_URL}/users/send-code?email=${encodeURIComponent(email)}`);
+    const response = await axios.get(
+      `${API_BASE_URL}/users/send-code?email=${email}`
+    );
     return response.data;
   },
 

@@ -3,6 +3,9 @@ import User from "../models/User";
 import { generateToken } from "../middleware/auth";
 import nodemailer from "nodemailer";
 import Otp from "../models/Otp";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Generate a random verification code
 const generateVerificationCode = () =>
@@ -11,6 +14,7 @@ const generateVerificationCode = () =>
 // Send verification code to email
 const sendVerificationEmail = async (email: string, code: string) => {
   const transporter = nodemailer.createTransport({
+    secure: false,
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
@@ -19,16 +23,21 @@ const sendVerificationEmail = async (email: string, code: string) => {
   });
 
   await transporter.sendMail({
-    from: `EduChat <${process.env.EMAIL_USER}>`,
+    from: process.env.EMAIL_USER,
     to: email,
-    subject: "Your Verification Code",
-    text: `Your verification code is: ${code}`,
+    subject: "Your EduChat Verification Code",
+    text: `Your verification code is: ${code} From: EduChat Team (${process.env.EMAIL_USER})`,
+    html: `
+      <h1>EduChat Verification</h1>
+      <p>Your verification code is: <strong>${code}</strong></p>
+      <p>From: EduChat Team (${process.env.EMAIL_USER})</p>
+    `,
   });
 };
 
 export const sendCode = async (req: Request, res: Response) => {
   const email = req.query.email as string;
-  
+
   if (!email) {
     res.status(400).json({ message: "Email is required" });
     return;
@@ -40,18 +49,18 @@ export const sendCode = async (req: Request, res: Response) => {
       res.status(400).json({ message: "User already exists" });
       return;
     }
-    
+
     const verificationCode = generateVerificationCode();
-    
+
     // Store the OTP in the database
     await Otp.findOneAndUpdate(
       { email },
       { email, code: verificationCode },
       { upsert: true, new: true }
     );
-    
+
     await sendVerificationEmail(email, verificationCode);
-    
+
     res.status(200).json({ message: "Verification code sent successfully" });
   } catch (err) {
     console.error("Send code error:", err);
